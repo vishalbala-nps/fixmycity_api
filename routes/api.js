@@ -7,7 +7,7 @@ const fs = require("fs");
 const ai = new GoogleGenAI({apiKey: process.env.GEMINI_API_KEY});
 const storage = multer({ dest: 'uploads/' });
 
-const dupradii = 20; // in meters
+const dupradii = 100; // in meters
 
 router.get('/issue/summary', storage.single("image"), (req, res) => {
   const { lat, lon } = req.body;
@@ -24,8 +24,12 @@ router.get('/issue/summary', storage.single("image"), (req, res) => {
   const base64 = fs.readFileSync(req.file.path, {encoding: "base64"});
   let prompt;
   let dupid = 0;
+  // Only consider reports within 20 meters using ST_Distance_Sphere
   db.query(
-    "SELECT id,description,type FROM Reports WHERE status IN('submitted','progress') AND MBRContains(ST_Buffer(POINT(?,?), ?), location)",
+    `SELECT id, description, type 
+     FROM Reports 
+     WHERE status IN('submitted','progress') 
+     AND ST_Distance_Sphere(location, POINT(?, ?)) <= ?`,
     [lon, lat, dupradii],
     function(err, results) {
       if (err) {
@@ -69,6 +73,7 @@ router.get('/issue/summary', storage.single("image"), (req, res) => {
             }
           }, { text: prompt }]
         }).then(function(r) {
+          console.log("Gemini response:", r.text);
           let rjson = JSON.parse(r.text);
           rjson.image = req.file.filename;
           if (rjson.duplicate === true) {
