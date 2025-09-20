@@ -71,7 +71,9 @@ router.get('/issue/summary', storage.single("image"), (req, res) => {
         }).then(function(r) {
           let rjson = JSON.parse(r.text);
           rjson.image = req.file.filename;
-          rjson.report = dupid;
+          if (rjson.duplicate === true) {
+            rjson.report = dupid;
+          }
           return res.status(200).json(rjson);
         }).catch(function(err) {
           console.error("Error generating content:", err);
