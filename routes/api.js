@@ -42,7 +42,7 @@ router.get('/issue/summary', storage.single("image"), (req, res) => {
         } else {
           console.log("Found nearby report");
           dupid = results[0].id;
-          prompt = "This is a civic issue reporting system. Check if this image matches the description " + results[0].description + " and category " + results[0].type + ". If it does, set duplicate to true and retain the description and category. If not, generate desc and category based on the image.";
+          prompt = "This is a civic issue reporting system. Check if this image matches the description '" + results[0].description + "' and category '" + results[0].type + "'. If it does, set duplicate to true. If false, describe the issue in detail to report it and categorise it.";
         }
         console.log("Calling Gemini with prompt:", prompt);
         ai.models.generateContent({
