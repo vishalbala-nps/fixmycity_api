@@ -1,18 +1,12 @@
 require('dotenv').config();
 
 const express = require('express');
-const mysql = require("mysql2");
 const cors = require("cors");
 const admin = require("firebase-admin");
 const serviceAccount = require("./serviceAccount.json");
+const db = require('./db'); // Import db from db.js
 
 const app = express();
-const db = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
-});
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
