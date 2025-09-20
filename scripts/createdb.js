@@ -23,11 +23,11 @@ db.connect(function(err) {
         `CREATE TABLE IF NOT EXISTS Reports (
             id INT AUTO_INCREMENT PRIMARY KEY,
             dateofreport DATE NOT NULL,
-            type VARCHAR(100) NOT NULL,
+            type ENUM('Pothole', 'Streetlight', 'Garbage', 'Water Stagnation', 'Other') NOT NULL,
             description TEXT,
             location POINT,
             count INT DEFAULT 1,
-            status VARCHAR(50) DEFAULT 'Pending'
+            status ENUM('submitted', 'progress', 'complete') DEFAULT 'submitted'
         )`,
         `CREATE TABLE IF NOT EXISTS UserReports (
             user INT,

@@ -16,6 +16,7 @@ const db = mysql.createConnection({
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
+
 app.use(cors());
 app.use(express.json());
 
