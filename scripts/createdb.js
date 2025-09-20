@@ -18,7 +18,7 @@ db.connect(function(err) {
 
     const tables = [
         `CREATE TABLE IF NOT EXISTS Admin (
-            id INT PRIMARY KEY
+            id VARCHAR(80) PRIMARY KEY
         )`,
         `CREATE TABLE IF NOT EXISTS Reports (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -30,7 +30,7 @@ db.connect(function(err) {
             status ENUM('submitted', 'progress', 'complete') DEFAULT 'submitted'
         )`,
         `CREATE TABLE IF NOT EXISTS UserReports (
-            user INT,
+            user VARCHAR(80),
             report INT,
             imagename VARCHAR(255),
             FOREIGN KEY (report) REFERENCES Reports(id)
