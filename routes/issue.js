@@ -10,6 +10,33 @@ const storage = multer({ dest: path.join(__dirname,"..",'uploads') });
 
 const dupradii = 100; // in meters
 
+/**
+ * @openapi
+ * /api/issue/summary:
+ *   get:
+ *     summary: Get issue summary with image and location
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *               lat:
+ *                 type: number
+ *               lon:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Issue summary with duplicate check
+ *       400:
+ *         description: Bad request (missing image or lat/lon)
+ *       500:
+ *         description: Database or Gemini error
+ */
 router.get('/summary', storage.single("image"), (req, res) => {
   if (!req.body || typeof req.body !== 'object') {
     if (req.file) fs.unlink(req.file.path, () => {});
@@ -93,6 +120,40 @@ router.get('/summary', storage.single("image"), (req, res) => {
   );
 });
 
+/**
+ * @openapi
+ * /api/issue:
+ *   post:
+ *     summary: Report a new issue or mark as duplicate
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               isDuplicate:
+ *                 type: boolean
+ *               image:
+ *                 type: string
+ *               report:
+ *                 type: integer
+ *               description:
+ *                 type: string
+ *               type:
+ *                 type: string
+ *               lat:
+ *                 type: number
+ *               lon:
+ *                 type: number
+ *     responses:
+ *       201:
+ *         description: Issue reported or duplicate marked
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Database error
+ */
 router.post('/', (req, res) => {
   if (!req.body || typeof req.body !== 'object') {
     return res.status(400).json({ error: 'Request body is required' });
@@ -162,7 +223,42 @@ router.post('/', (req, res) => {
   }
 });
 
-// Update the /issue GET route to support filter query parameter
+/**
+ * @openapi
+ * /api/issue:
+ *   get:
+ *     summary: Get all issues (with optional filter)
+ *     parameters:
+ *       - in: query
+ *         name: filter
+ *         schema:
+ *           type: string
+ *           enum: [all, user]
+ *         description: Filter issues (all or only for the logged-in user)
+ *     responses:
+ *       200:
+ *         description: List of issues
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id: { type: integer }
+ *                   dateofreport: { type: string }
+ *                   type: { type: string }
+ *                   description: { type: string }
+ *                   count: { type: integer }
+ *                   status: { type: string }
+ *                   lat: { type: number }
+ *                   lon: { type: number }
+ *                   images:
+ *                     type: array
+ *                     items: { type: string }
+ *       500:
+ *         description: Database error
+ */
 router.get('/', (req, res) => {
   const { filter } = req.query;
   let sql = `
@@ -206,5 +302,4 @@ router.get('/', (req, res) => {
   });
 });
 
-// Add more API routes here as needed
 module.exports = router;

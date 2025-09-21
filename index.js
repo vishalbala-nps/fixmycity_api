@@ -6,7 +6,8 @@ const db = require('./db'); // Import db from db.js
 const path = require('path');
 const jwt = require('jsonwebtoken');
 const admin = require('./firebase');
-
+const swaggerUi = require('swagger-ui-express');
+const swaggerjson = require('./swagger.json'); 
 const app = express();
 
 app.use(cors());
@@ -59,6 +60,7 @@ const adminRouter = require('./routes/admin');
 app.use('/api/issue', authenticateCitizen, issueRouter);
 app.use('/api/image', imageRouter);
 app.use('/api/admin', authenticateAdmin, adminRouter);
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerjson));
 
 // Serve images by filename
 app.get('/api/image/:imagename', (req, res) => {

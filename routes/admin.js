@@ -4,6 +4,42 @@ const jwt = require('jsonwebtoken');
 const db = require('../db'); 
 const admin = require('../firebase');
 
+/**
+ * @openapi
+ * /api/admin/auth:
+ *   post:
+ *     summary: Authenticate admin user
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               idToken:
+ *                 type: string
+ *                 description: Firebase ID token
+ *     responses:
+ *       200:
+ *         description: Admin authenticated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 token:
+ *                   type: string
+ *       400:
+ *         description: idToken is required in body
+ *       401:
+ *         description: Invalid or expired idToken
+ *       403:
+ *         description: User is not an admin
+ *       500:
+ *         description: Database error
+ */
 router.post('/auth', (req, res) => {
     if (!req.body || typeof req.body !== 'object' || !req.body.idToken) {
         return res.status(400).json({ error: 'idToken is required in body' });
@@ -32,6 +68,35 @@ router.post('/auth', (req, res) => {
     });
 });
 
+/**
+ * @openapi
+ * /api/admin/issue:
+ *   get:
+ *     summary: Get all reports (admin)
+ *     responses:
+ *       200:
+ *         description: List of reports from IssueView
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id: { type: integer }
+ *                   dateofreport: { type: string }
+ *                   type: { type: string }
+ *                   description: { type: string }
+ *                   count: { type: integer }
+ *                   status: { type: string }
+ *                   lat: { type: number }
+ *                   lon: { type: number }
+ *                   images:
+ *                     type: array
+ *                     items: { type: string }
+ *       500:
+ *         description: Database error
+ */
 router.get('/issue', (req, res) => {
     db.query(
         `SELECT 
@@ -67,6 +132,33 @@ router.get('/issue', (req, res) => {
     );
 });
 
+/**
+ * @openapi
+ * /api/admin/issue:
+ *   post:
+ *     summary: Update report status
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [submitted, progress, complete]
+ *               report:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Report status updated
+ *       400:
+ *         description: status and report are required or invalid status value
+ *       404:
+ *         description: Report not found
+ *       500:
+ *         description: Database error
+ */
 router.post('/issue', (req, res) => {
     const { status, report } = req.body;
     const allowedStatuses = ['submitted', 'progress', 'complete'];

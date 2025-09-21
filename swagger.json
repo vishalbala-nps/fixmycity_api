@@ -1,0 +1,345 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "FixMyCity API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/admin/auth": {
+      "post": {
+        "summary": "Authenticate admin user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "idToken": {
+                    "type": "string",
+                    "description": "Firebase ID token"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Admin authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "token": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "idToken is required in body"
+          },
+          "401": {
+            "description": "Invalid or expired idToken"
+          },
+          "403": {
+            "description": "User is not an admin"
+          },
+          "500": {
+            "description": "Database error"
+          }
+        }
+      }
+    },
+    "/api/admin/issue": {
+      "get": {
+        "summary": "Get all reports (admin)",
+        "responses": {
+          "200": {
+            "description": "List of reports from IssueView",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "dateofreport": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "count": {
+                        "type": "integer"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "lat": {
+                        "type": "number"
+                      },
+                      "lon": {
+                        "type": "number"
+                      },
+                      "images": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Update report status",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "submitted",
+                      "progress",
+                      "complete"
+                    ]
+                  },
+                  "report": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Report status updated"
+          },
+          "400": {
+            "description": "status and report are required or invalid status value"
+          },
+          "404": {
+            "description": "Report not found"
+          },
+          "500": {
+            "description": "Database error"
+          }
+        }
+      }
+    },
+    "/api/image/{imagename}": {
+      "get": {
+        "summary": "Get an image by filename",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "imagename",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the image file to retrieve"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The image file",
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Image not found"
+          }
+        }
+      }
+    },
+    "/api/issue/summary": {
+      "get": {
+        "summary": "Get issue summary with image and location",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "image": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "lat": {
+                    "type": "number"
+                  },
+                  "lon": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Issue summary with duplicate check"
+          },
+          "400": {
+            "description": "Bad request (missing image or lat/lon)"
+          },
+          "500": {
+            "description": "Database or Gemini error"
+          }
+        }
+      }
+    },
+    "/api/issue": {
+      "post": {
+        "summary": "Report a new issue or mark as duplicate",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "isDuplicate": {
+                    "type": "boolean"
+                  },
+                  "image": {
+                    "type": "string"
+                  },
+                  "report": {
+                    "type": "integer"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "lat": {
+                    "type": "number"
+                  },
+                  "lon": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Issue reported or duplicate marked"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "500": {
+            "description": "Database error"
+          }
+        }
+      },
+      "get": {
+        "summary": "Get all issues (with optional filter)",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "filter",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "user"
+              ]
+            },
+            "description": "Filter issues (all or only for the logged-in user)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of issues",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "dateofreport": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "count": {
+                        "type": "integer"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "lat": {
+                        "type": "number"
+                      },
+                      "lon": {
+                        "type": "number"
+                      },
+                      "images": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database error"
+          }
+        }
+      }
+    }
+  },
+  "components": {},
+  "tags": []
+}
