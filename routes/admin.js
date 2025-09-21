@@ -11,7 +11,7 @@ const storage = multer({ dest: path.join(__dirname, "..", "uploads") });
  * @openapi
  * /api/admin/auth:
  *   post:
- *     summary: Authenticate admin user
+ *     summary: Authenticate admin user (Admin Only)
  *     requestBody:
  *       required: true
  *       content:
@@ -75,7 +75,7 @@ router.post('/auth', (req, res) => {
  * @openapi
  * /api/admin/issue:
  *   get:
- *     summary: Get all reports (admin)
+ *     summary: Get all reports (Admin Only)
  *     responses:
  *       200:
  *         description: List of reports from IssueView
@@ -139,7 +139,7 @@ router.get('/issue', (req, res) => {
  * @openapi
  * /api/admin/issue:
  *   post:
- *     summary: Update report status
+ *     summary: Update report status (Admin Only)
  *     requestBody:
  *       required: true
  *       content:

@@ -306,28 +306,35 @@ router.get('/', (req, res) => {
  * @openapi
  * /api/issue/resolved:
  *   get:
- *     summary: Get resolved issue details by report id
+ *     summary: Get resolved issue details by report id or all resolved issues
  *     parameters:
  *       - in: query
  *         name: report
- *         required: true
+ *         required: false
  *         schema:
  *           type: integer
- *         description: Report id to fetch resolved issue details
+ *         description: Report id to fetch resolved issue details. If not provided, returns all resolved issues.
  *     responses:
  *       200:
- *         description: Resolved issue details
+ *         description: Resolved issue details or list of all resolved issues
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 report: { type: integer }
- *                 dateofresolution: { type: string }
- *                 image: { type: string }
- *                 remarks: { type: string }
- *       400:
- *         description: report query parameter is required
+ *               oneOf:
+ *                 - type: object
+ *                   properties:
+ *                     report: { type: integer }
+ *                     dateofresolution: { type: string }
+ *                     image: { type: string }
+ *                     remarks: { type: string }
+ *                 - type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       report: { type: integer }
+ *                       dateofresolution: { type: string }
+ *                       image: { type: string }
+ *                       remarks: { type: string }
  *       404:
  *         description: Resolved issue not found
  *       500:
