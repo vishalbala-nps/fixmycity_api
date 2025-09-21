@@ -98,7 +98,33 @@ if (action === 'create') {
         }
         connection.end();
     });
+} else if (action === 'addadmin') {
+    const adminId = process.argv[3];
+    if (!adminId) {
+        console.error("Please provide an admin id. Usage: node dbtool.js addadmin <adminId>");
+        connection.end();
+        return;
+    }
+    connection.changeUser({ database: dbName }, err => {
+        if (err) {
+            console.error("Error selecting database:", err);
+            connection.end();
+            return;
+        }
+        connection.query(
+            "INSERT INTO Admin (id) VALUES (?)",
+            [adminId],
+            (err, result) => {
+                if (err) {
+                    console.error("Error adding admin:", err);
+                } else {
+                    console.log(`Admin user '${adminId}' added.`);
+                }
+                connection.end();
+            }
+        );
+    });
 } else {
-    console.log("Usage: node dbtool.js [create|clear|drop]");
+    console.log("Usage: node dbtool.js [create|clear|drop|addadmin <adminId>]");
     connection.end();
 }

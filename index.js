@@ -2,15 +2,12 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require("cors");
-const admin = require("firebase-admin");
-const serviceAccount = require("./serviceAccount.json");
 const db = require('./db'); // Import db from db.js
 const path = require('path');
+const jwt = require('jsonwebtoken');
+const admin = require('./firebase');
 
 const app = express();
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-});
 
 app.use(cors());
 app.use(express.json());
@@ -32,13 +29,36 @@ function authenticateCitizen(req, res, next) {
         });
 }
 
+function authenticateAdmin(req, res, next) {
+    if (req.originalUrl === '/api/admin/auth') {
+        return next();
+    }
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'No token provided' });
+    }
+    const token = authHeader.split('Bearer ')[1];
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        if (decoded.admin) {
+            req.user = decoded.user; // Set user id
+            next();
+        } else {
+            return res.status(403).json({ error: 'User is not an admin' });
+        }
+    } catch {
+        return res.status(401).json({ error: 'Invalid or expired token' });
+    }
+}
+
 //Routes
 const issueRouter = require('./routes/issue');
-const imageRouter = require('./routes/image'); // Add this line
+const imageRouter = require('./routes/image');
+const adminRouter = require('./routes/admin');
 
-// Apply auth middleware to all /api routes
 app.use('/api/issue', authenticateCitizen, issueRouter);
-app.use('/api/image', imageRouter); // Add this line
+app.use('/api/image', imageRouter);
+app.use('/api/admin', authenticateAdmin, adminRouter);
 
 // Serve images by filename
 app.get('/api/image/:imagename', (req, res) => {
