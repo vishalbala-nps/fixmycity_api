@@ -18,7 +18,7 @@ const options = {
 const swaggerSpec = swaggerJSDoc(options);
 
 fs.writeFileSync(
-  path.join(__dirname, '../swagger.json'),
+  path.join(__dirname, '../static/swagger.json'),
   JSON.stringify(swaggerSpec, null, 2)
 );
 

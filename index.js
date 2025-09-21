@@ -6,8 +6,6 @@ const db = require('./db'); // Import db from db.js
 const path = require('path');
 const jwt = require('jsonwebtoken');
 const admin = require('./firebase');
-const swaggerUi = require('swagger-ui-express');
-const swaggerjson = require('./swagger.json'); 
 const app = express();
 
 app.use(cors());
@@ -60,17 +58,15 @@ const adminRouter = require('./routes/admin');
 app.use('/api/issue', authenticateCitizen, issueRouter);
 app.use('/api/image', imageRouter);
 app.use('/api/admin', authenticateAdmin, adminRouter);
-app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerjson));
 
-// Serve images by filename
-app.get('/api/image/:imagename', (req, res) => {
-    const imagename = req.params.imagename;
-    const imagePath = path.join(__dirname, 'uploads', imagename);
-    res.sendFile(imagePath, err => {
-        if (err) {
-            res.status(404).json({ error: 'Image not found' });
-        }
-    });
+// Serve swagger.json directly
+app.get('/api/swagger.json', (req, res) => {
+    res.sendFile(path.join(__dirname, "static",'swagger.json'));
+});
+
+// Serve static api-docs.html for /api/docs
+app.get('/api/docs', (req, res) => {
+    res.sendFile(path.join(__dirname, "static", 'api-docs.html'));
 });
 
 db.connect(function(err) {
