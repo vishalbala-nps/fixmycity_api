@@ -5,6 +5,7 @@ const cors = require("cors");
 const admin = require("firebase-admin");
 const serviceAccount = require("./serviceAccount.json");
 const db = require('./db'); // Import db from db.js
+const path = require('path');
 
 const app = express();
 admin.initializeApp({
@@ -32,10 +33,23 @@ function authenticateCitizen(req, res, next) {
 }
 
 //Routes
-const issueRouter = require('./routes/api');
+const issueRouter = require('./routes/issue');
+const imageRouter = require('./routes/image'); // Add this line
 
 // Apply auth middleware to all /api routes
 app.use('/api/issue', authenticateCitizen, issueRouter);
+app.use('/api/image', imageRouter); // Add this line
+
+// Serve images by filename
+app.get('/api/image/:imagename', (req, res) => {
+    const imagename = req.params.imagename;
+    const imagePath = path.join(__dirname, 'uploads', imagename);
+    res.sendFile(imagePath, err => {
+        if (err) {
+            res.status(404).json({ error: 'Image not found' });
+        }
+    });
+});
 
 db.connect(function(err) {
     if (err) {

@@ -4,8 +4,9 @@ const multer = require('multer');
 const {GoogleGenAI,Type} = require("@google/genai")
 const db = require('../db'); // Import the shared db connection
 const fs = require("fs");
+const path = require('path');
 const ai = new GoogleGenAI({apiKey: process.env.GEMINI_API_KEY});
-const storage = multer({ dest: 'uploads/' });
+const storage = multer({ dest: path.join(__dirname,"..",'uploads') });
 
 const dupradii = 100; // in meters
 
