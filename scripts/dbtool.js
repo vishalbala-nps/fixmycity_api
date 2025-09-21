@@ -31,6 +31,13 @@ const schema = [
         imagename VARCHAR(255),
         FOREIGN KEY (report) REFERENCES Reports(id)
     )`,
+    `CREATE TABLE IF NOT EXISTS ResolvedIssues (
+        report INT,
+        dateofresolution DATE NOT NULL,
+        image VARCHAR(255),
+        remarks TEXT,
+        FOREIGN KEY (report) REFERENCES Reports(id)
+    )`,
     `CREATE OR REPLACE VIEW IssueView AS
       SELECT 
         Reports.id, 

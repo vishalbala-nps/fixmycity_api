@@ -117,7 +117,7 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": {
+            "multipart/form-data": {
               "schema": {
                 "type": "object",
                 "properties": {
@@ -131,6 +131,13 @@
                   },
                   "report": {
                     "type": "integer"
+                  },
+                  "image": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "remarks": {
+                    "type": "string"
                   }
                 }
               }
@@ -332,6 +339,57 @@
                 }
               }
             }
+          },
+          "500": {
+            "description": "Database error"
+          }
+        }
+      }
+    },
+    "/api/issue/resolved": {
+      "get": {
+        "summary": "Get resolved issue details by report id",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "report",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Report id to fetch resolved issue details"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resolved issue details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "report": {
+                      "type": "integer"
+                    },
+                    "dateofresolution": {
+                      "type": "string"
+                    },
+                    "image": {
+                      "type": "string"
+                    },
+                    "remarks": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "report query parameter is required"
+          },
+          "404": {
+            "description": "Resolved issue not found"
           },
           "500": {
             "description": "Database error"

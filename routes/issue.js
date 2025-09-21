@@ -302,4 +302,67 @@ router.get('/', (req, res) => {
   });
 });
 
+/**
+ * @openapi
+ * /api/issue/resolved:
+ *   get:
+ *     summary: Get resolved issue details by report id
+ *     parameters:
+ *       - in: query
+ *         name: report
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Report id to fetch resolved issue details
+ *     responses:
+ *       200:
+ *         description: Resolved issue details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 report: { type: integer }
+ *                 dateofresolution: { type: string }
+ *                 image: { type: string }
+ *                 remarks: { type: string }
+ *       400:
+ *         description: report query parameter is required
+ *       404:
+ *         description: Resolved issue not found
+ *       500:
+ *         description: Database error
+ */
+router.get('/resolved', (req, res) => {
+  const reportId = req.query.report;
+  if (!reportId) {
+    // Show all resolved issues
+    db.query(
+      "SELECT report, dateofresolution, image, remarks FROM ResolvedIssues",
+      (err, results) => {
+        if (err) {
+          console.error("Database query error:", err);
+          return res.status(500).json({ error: 'Database error' });
+        }
+        res.json(results);
+      }
+    );
+    return;
+  }
+  db.query(
+    "SELECT report, dateofresolution, image, remarks FROM ResolvedIssues WHERE report = ?",
+    [reportId],
+    (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+      if (!results.length) {
+        return res.status(404).json({ error: 'Resolved issue not found' });
+      }
+      res.json(results[0]);
+    }
+  );
+});
+
 module.exports = router;

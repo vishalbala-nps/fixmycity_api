@@ -3,6 +3,9 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const db = require('../db'); 
 const admin = require('../firebase');
+const multer = require('multer');
+const path = require('path');
+const storage = multer({ dest: path.join(__dirname, "..", "uploads") });
 
 /**
  * @openapi
@@ -140,7 +143,7 @@ router.get('/issue', (req, res) => {
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -149,6 +152,11 @@ router.get('/issue', (req, res) => {
  *                 enum: [submitted, progress, complete]
  *               report:
  *                 type: integer
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *               remarks:
+ *                 type: string
  *     responses:
  *       200:
  *         description: Report status updated
@@ -159,15 +167,23 @@ router.get('/issue', (req, res) => {
  *       500:
  *         description: Database error
  */
-router.post('/issue', (req, res) => {
-    const { status, report } = req.body;
+router.post('/issue', storage.single('image'), (req, res) => {
+    const { status, report, remarks } = req.body;
     const allowedStatuses = ['submitted', 'progress', 'complete'];
+    // image is now a file, not a string
+    const image = req.file ? req.file.filename : null;
+
     if (!status || !report) {
         return res.status(400).json({ error: 'status and report are required' });
     }
     if (!allowedStatuses.includes(status)) {
         return res.status(400).json({ error: 'Invalid status value' });
     }
+    // If status is complete, image and remarks are required
+    if (status === 'complete' && (!image || !remarks)) {
+        return res.status(400).json({ error: 'image and remarks are required when status is complete' });
+    }
+    // Update Reports and, if status is 'complete', insert into ResolvedIssues
     db.query(
         "UPDATE Reports SET status = ? WHERE id = ?",
         [status, report],
@@ -179,7 +195,23 @@ router.post('/issue', (req, res) => {
             if (result.affectedRows === 0) {
                 return res.status(404).json({ error: 'Report not found' });
             }
-            return res.status(200).json({ message: 'Report status updated' });
+            if (status === 'complete') {
+                // Insert into ResolvedIssues (no upsert)
+                db.query(
+                    `INSERT INTO ResolvedIssues (report, dateofresolution, image, remarks)
+                     VALUES (?, CURDATE(), ?, ?)`,
+                    [report, image, remarks],
+                    (err2) => {
+                        if (err2) {
+                            console.error("Database update error (ResolvedIssues):", err2);
+                            return res.status(500).json({ error: 'Database error (ResolvedIssues)' });
+                        }
+                        return res.status(200).json({ message: 'Report status and resolution updated' });
+                    }
+                );
+            } else {
+                return res.status(200).json({ message: 'Report status updated' });
+            }
         }
     );
 });
