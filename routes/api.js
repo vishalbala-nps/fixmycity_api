@@ -73,7 +73,6 @@ router.get('/issue/summary', storage.single("image"), (req, res) => {
             }
           }, { text: prompt }]
         }).then(function(r) {
-          console.log("Gemini response:", r.text);
           let rjson = JSON.parse(r.text);
           rjson.image = req.file.filename;
           if (rjson.duplicate === true) {
@@ -156,9 +155,49 @@ router.post('/issue', (req, res) => {
   }
 });
 
+// Update the /issue GET route to support filter query parameter
+router.get('/issue', (req, res) => {
+  const { filter } = req.query;
+  let sql = `
+    SELECT 
+      id, 
+      dateofreport, 
+      type, 
+      description, 
+      count, 
+      status, 
+      lat,
+      lon,
+      images,
+      users
+    FROM IssueView
+    `;
 
+  if (filter === 'user') {
+    sql += ` WHERE FIND_IN_SET(?, users)`;
+  }
+  sql += ' ORDER BY dateofreport DESC';
 
-// Add more API routes here as needed
-module.exports = router;
+  db.query(sql,[req.user], (err, results) => {
+    if (err) {
+      console.error("Database query error:", err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    const formatted = results.map(r => ({
+      id: r.id,
+      dateofreport: r.dateofreport,
+      type: r.type,
+      description: r.description,
+      count: r.count,
+      status: r.status,
+      lat: r.lat,
+      lon: r.lon,
+      images: r.images ? r.images.split(',') : []
+      // users field intentionally omitted from response
+    }));
+    res.json(formatted);
+  });
+});
+
 // Add more API routes here as needed
 module.exports = router;

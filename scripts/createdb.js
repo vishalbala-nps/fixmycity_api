@@ -34,7 +34,22 @@ db.connect(function(err) {
             report INT,
             imagename VARCHAR(255),
             FOREIGN KEY (report) REFERENCES Reports(id)
-        )`
+        )`,
+        `CREATE OR REPLACE VIEW IssueView AS
+          SELECT 
+            Reports.id, 
+            Reports.dateofreport, 
+            Reports.type, 
+            Reports.description, 
+            Reports.count, 
+            Reports.status, 
+            ST_Y(Reports.location) AS lat,
+            ST_X(Reports.location) AS lon,
+            GROUP_CONCAT(UserReports.imagename) AS images,
+            GROUP_CONCAT(UserReports.user) AS users
+          FROM Reports
+          LEFT JOIN UserReports ON Reports.id = UserReports.report
+          GROUP BY Reports.id`
     ];
 
     let created = 0;
