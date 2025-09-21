@@ -10,6 +10,10 @@ const storage = multer({ dest: 'uploads/' });
 const dupradii = 100; // in meters
 
 router.get('/summary', storage.single("image"), (req, res) => {
+  if (!req.body || typeof req.body !== 'object') {
+    if (req.file) fs.unlink(req.file.path, () => {});
+    return res.status(400).json({ error: 'Request body is required' });
+  }
   const { lat, lon } = req.body;
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
@@ -89,7 +93,10 @@ router.get('/summary', storage.single("image"), (req, res) => {
 });
 
 router.post('/', (req, res) => {
-  const { isDuplicate, image, report, description, type } = req.body;
+  if (!req.body || typeof req.body !== 'object') {
+    return res.status(400).json({ error: 'Request body is required' });
+  }
+  const { isDuplicate, image, report, description, type, lat, lon } = req.body;
 
   if (typeof isDuplicate === 'undefined' || !image) {
     return res.status(400).json({ error: 'isDuplicate and image are required' });
@@ -124,7 +131,6 @@ router.post('/', (req, res) => {
     );
   } else {
     // Not duplicate: require description, type, latitude, longitude
-    const { lat, lon } = req.body;
     if (!description || !type || typeof lat === 'undefined' || typeof lon === 'undefined') {
       return res.status(400).json({ error: 'description, type, lat, and lon are required for new issues' });
     }
