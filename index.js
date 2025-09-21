@@ -32,10 +32,10 @@ function authenticateCitizen(req, res, next) {
 }
 
 //Routes
-const apiRouter = require('./routes/api');
+const issueRouter = require('./routes/api');
 
 // Apply auth middleware to all /api routes
-app.use('/api', authenticateCitizen, apiRouter);
+app.use('/api/issue', authenticateCitizen, issueRouter);
 
 db.connect(function(err) {
     if (err) {

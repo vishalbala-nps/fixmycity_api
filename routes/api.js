@@ -9,7 +9,7 @@ const storage = multer({ dest: 'uploads/' });
 
 const dupradii = 100; // in meters
 
-router.get('/issue/summary', storage.single("image"), (req, res) => {
+router.get('/summary', storage.single("image"), (req, res) => {
   const { lat, lon } = req.body;
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
@@ -88,7 +88,7 @@ router.get('/issue/summary', storage.single("image"), (req, res) => {
   );
 });
 
-router.post('/issue', (req, res) => {
+router.post('/', (req, res) => {
   const { isDuplicate, image, report, description, type } = req.body;
 
   if (typeof isDuplicate === 'undefined' || !image) {
@@ -156,7 +156,7 @@ router.post('/issue', (req, res) => {
 });
 
 // Update the /issue GET route to support filter query parameter
-router.get('/issue', (req, res) => {
+router.get('/', (req, res) => {
   const { filter } = req.query;
   let sql = `
     SELECT 
