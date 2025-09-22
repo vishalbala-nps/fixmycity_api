@@ -61,6 +61,22 @@
     "/api/admin/issue": {
       "get": {
         "summary": "Get all reports (Admin Only)",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "submitted",
+                "progress",
+                "complete",
+                "rejected"
+              ]
+            },
+            "description": "Filter issues by status"
+          }
+        ],
         "responses": {
           "200": {
             "description": "List of reports",
@@ -370,6 +386,20 @@
               ]
             },
             "description": "Filter issues (all or only for the logged-in user)"
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "submitted",
+                "progress",
+                "complete",
+                "rejected"
+              ]
+            },
+            "description": "Filter issues by status"
           }
         ],
         "responses": {
