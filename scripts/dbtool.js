@@ -23,7 +23,14 @@ const schema = [
         description TEXT,
         location POINT,
         count INT DEFAULT 1,
-        status ENUM('submitted', 'progress', 'complete') DEFAULT 'submitted'
+        status ENUM('submitted', 'progress', 'complete', 'rejected') DEFAULT 'submitted',
+        department ENUM(
+            'Department of Drinking Water and Sanitation',
+            'Department of Rural Works',
+            'Department of Road Construction',
+            'Department of Energy',
+            'Department of Health, Medical Education & Family Welfare'
+        )
     )`,
     `CREATE TABLE IF NOT EXISTS UserReports (
         user VARCHAR(80),
@@ -44,6 +51,7 @@ const schema = [
         Reports.dateofreport, 
         Reports.type, 
         Reports.description, 
+        Reports.department,
         Reports.count, 
         Reports.status, 
         ST_Y(Reports.location) AS lat,

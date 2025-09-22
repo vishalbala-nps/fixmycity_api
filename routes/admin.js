@@ -90,6 +90,9 @@ router.post('/auth', (req, res) => {
  *                   dateofreport: { type: string }
  *                   type: { type: string }
  *                   description: { type: string }
+ *                   department:
+ *                     type: string
+ *                     enum: ["Department of Drinking Water and Sanitation", "Department of Rural Works", "Department of Road Construction", "Department of Energy", "Department of Health, Medical Education & Family Welfare"]
  *                   count: { type: integer }
  *                   status: { type: string }
  *                   lat: { type: number }
@@ -107,6 +110,7 @@ router.get('/issue', (req, res) => {
             dateofreport, 
             type, 
             description, 
+            department,
             count, 
             status, 
             lat,
@@ -124,6 +128,7 @@ router.get('/issue', (req, res) => {
                 dateofreport: r.dateofreport,
                 type: r.type,
                 description: r.description,
+                department: r.department,
                 count: r.count,
                 status: r.status,
                 lat: r.lat,
@@ -149,7 +154,7 @@ router.get('/issue', (req, res) => {
  *             properties:
  *               status:
  *                 type: string
- *                 enum: [submitted, progress, complete]
+ *                 enum: [submitted, progress, complete, rejected]
  *               report:
  *                 type: integer
  *               image:
@@ -169,8 +174,7 @@ router.get('/issue', (req, res) => {
  */
 router.post('/issue', storage.single('image'), (req, res) => {
     const { status, report, remarks } = req.body;
-    const allowedStatuses = ['submitted', 'progress', 'complete'];
-    // image is now a file, not a string
+    const allowedStatuses = ['submitted', 'progress', 'complete', 'rejected'];
     const image = req.file ? req.file.filename : null;
 
     if (!status || !report) {
@@ -196,7 +200,6 @@ router.post('/issue', storage.single('image'), (req, res) => {
                 return res.status(404).json({ error: 'Report not found' });
             }
             if (status === 'complete') {
-                // Insert into ResolvedIssues (no upsert)
                 db.query(
                     `INSERT INTO ResolvedIssues (report, dateofresolution, image, remarks)
                      VALUES (?, CURDATE(), ?, ?)`,
@@ -209,6 +212,8 @@ router.post('/issue', storage.single('image'), (req, res) => {
                         return res.status(200).json({ message: 'Report status and resolution updated' });
                     }
                 );
+            } else if (status === 'rejected') {
+                return res.status(200).json({ message: 'Report status updated to rejected' });
             } else {
                 return res.status(200).json({ message: 'Report status updated' });
             }
