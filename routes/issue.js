@@ -262,6 +262,12 @@ router.post('/', (req, res) => {
  *           type: string
  *           enum: [all, user]
  *         description: Filter issues (all or only for the logged-in user)
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [submitted, progress, complete, rejected]
+ *         description: Filter issues by status
  *     responses:
  *       200:
  *         description: List of issues
@@ -297,7 +303,7 @@ router.post('/', (req, res) => {
  *         description: Database error
  */
 router.get('/', (req, res) => {
-  const { filter } = req.query;
+  const { filter, status } = req.query;
   let sql = `
     SELECT 
       id, 
@@ -316,13 +322,23 @@ router.get('/', (req, res) => {
       resolved_remarks
     FROM IssueView
     `;
+  const params = [];
 
+  const conditions = [];
   if (filter === 'user') {
-    sql += ` WHERE FIND_IN_SET(?, users)`;
+    conditions.push('FIND_IN_SET(?, users)');
+    params.push(req.user);
+  }
+  if (status) {
+    conditions.push('status = ?');
+    params.push(status);
+  }
+  if (conditions.length > 0) {
+    sql += ' WHERE ' + conditions.join(' AND ');
   }
   sql += ' ORDER BY dateofreport DESC';
 
-  db.query(sql, [req.user], (err, results) => {
+  db.query(sql, params, (err, results) => {
     if (err) {
       console.error("Database query error:", err);
       return res.status(500).json({ error: 'Database error' });

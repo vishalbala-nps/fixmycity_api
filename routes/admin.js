@@ -76,6 +76,13 @@ router.post('/auth', (req, res) => {
  * /api/admin/issue:
  *   get:
  *     summary: Get all reports (Admin Only)
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [submitted, progress, complete, rejected]
+ *         description: Filter issues by status
  *     responses:
  *       200:
  *         description: List of reports
@@ -111,8 +118,9 @@ router.post('/auth', (req, res) => {
  *         description: Database error
  */
 router.get('/issue', (req, res) => {
-    db.query(
-        `SELECT 
+    const { status } = req.query;
+    let sql = `
+        SELECT 
             id, 
             dateofreport, 
             category, 
@@ -127,37 +135,43 @@ router.get('/issue', (req, res) => {
             resolved_image,
             resolved_remarks
         FROM IssueView
-        ORDER BY dateofreport DESC`,
-        (err, results) => {
-            if (err) {
-                console.error("Database query error:", err);
-                return res.status(500).json({ error: 'Database error' });
-            }
-            const formatted = results.map(r => {
-                const base = {
-                    id: r.id,
-                    dateofreport: r.dateofreport,
-                    category: r.category,
-                    description: r.description,
-                    department: r.department,
-                    count: r.count,
-                    status: r.status,
-                    lat: r.lat,
-                    lon: r.lon,
-                    images: r.images ? r.images.split(',') : []
-                };
-                if (r.dateofresolution) {
-                    base.resolved = {
-                        dateofresolution: r.dateofresolution,
-                        image: r.resolved_image,
-                        remarks: r.resolved_remarks
-                    };
-                }
-                return base;
-            });
-            res.json(formatted);
+    `;
+    const params = [];
+    if (status) {
+        sql += ' WHERE status = ?';
+        params.push(status);
+    }
+    sql += ' ORDER BY dateofreport DESC';
+
+    db.query(sql, params, (err, results) => {
+        if (err) {
+            console.error("Database query error:", err);
+            return res.status(500).json({ error: 'Database error' });
         }
-    );
+        const formatted = results.map(r => {
+            const base = {
+                id: r.id,
+                dateofreport: r.dateofreport,
+                category: r.category,
+                description: r.description,
+                department: r.department,
+                count: r.count,
+                status: r.status,
+                lat: r.lat,
+                lon: r.lon,
+                images: r.images ? r.images.split(',') : []
+            };
+            if (r.dateofresolution) {
+                base.resolved = {
+                    dateofresolution: r.dateofresolution,
+                    image: r.resolved_image,
+                    remarks: r.resolved_remarks
+                };
+            }
+            return base;
+        });
+        res.json(formatted);
+    });
 });
 
 /**
