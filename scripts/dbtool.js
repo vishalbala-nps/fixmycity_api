@@ -19,7 +19,7 @@ const schema = [
     `CREATE TABLE IF NOT EXISTS Reports (
         id INT AUTO_INCREMENT PRIMARY KEY,
         dateofreport DATE NOT NULL,
-        type ENUM('Pothole', 'Streetlight', 'Garbage', 'Water Stagnation', 'Other') NOT NULL,
+        category ENUM('Pothole', 'Streetlight', 'Garbage', 'Water Stagnation', 'Other') NOT NULL,
         description TEXT,
         location POINT,
         count INT DEFAULT 1,
@@ -49,7 +49,7 @@ const schema = [
       SELECT 
         Reports.id, 
         Reports.dateofreport, 
-        Reports.type, 
+        Reports.category, 
         Reports.description, 
         Reports.department,
         Reports.count, 

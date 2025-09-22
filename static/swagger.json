@@ -77,7 +77,7 @@
                       "dateofreport": {
                         "type": "string"
                       },
-                      "type": {
+                      "category": {
                         "type": "string"
                       },
                       "description": {
@@ -245,7 +245,49 @@
         },
         "responses": {
           "200": {
-            "description": "Issue summary with duplicate check"
+            "description": "Issue summary with duplicate check",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "description": {
+                      "type": "string"
+                    },
+                    "category": {
+                      "type": "string",
+                      "enum": [
+                        "Pothole",
+                        "Streetlight",
+                        "Garbage",
+                        "Water Stagnation",
+                        "Other"
+                      ]
+                    },
+                    "department": {
+                      "type": "string",
+                      "enum": [
+                        "Department of Drinking Water and Sanitation",
+                        "Department of Rural Works",
+                        "Department of Road Construction",
+                        "Department of Energy",
+                        "Department of Health, Medical Education & Family Welfare"
+                      ]
+                    },
+                    "duplicate": {
+                      "type": "boolean"
+                    },
+                    "image": {
+                      "type": "string"
+                    },
+                    "report": {
+                      "type": "integer",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request (missing image or lat/lon)"
@@ -266,7 +308,7 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "isDuplicate": {
+                  "duplicate": {
                     "type": "boolean"
                   },
                   "image": {
@@ -278,7 +320,7 @@
                   "description": {
                     "type": "string"
                   },
-                  "type": {
+                  "category": {
                     "type": "string"
                   },
                   "department": {
@@ -346,7 +388,7 @@
                       "dateofreport": {
                         "type": "string"
                       },
-                      "type": {
+                      "category": {
                         "type": "string"
                       },
                       "description": {

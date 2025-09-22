@@ -88,7 +88,7 @@ router.post('/auth', (req, res) => {
  *                 properties:
  *                   id: { type: integer }
  *                   dateofreport: { type: string }
- *                   type: { type: string }
+ *                   category: { type: string }
  *                   description: { type: string }
  *                   department:
  *                     type: string
@@ -115,7 +115,7 @@ router.get('/issue', (req, res) => {
         `SELECT 
             id, 
             dateofreport, 
-            type, 
+            category, 
             description, 
             department,
             count, 
@@ -137,7 +137,7 @@ router.get('/issue', (req, res) => {
                 const base = {
                     id: r.id,
                     dateofreport: r.dateofreport,
-                    type: r.type,
+                    category: r.category,
                     description: r.description,
                     department: r.department,
                     count: r.count,

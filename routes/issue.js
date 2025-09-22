@@ -32,6 +32,26 @@ const dupradii = 100; // in meters
  *     responses:
  *       200:
  *         description: Issue summary with duplicate check
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 description:
+ *                   type: string
+ *                 category:
+ *                   type: string
+ *                   enum: ["Pothole", "Streetlight", "Garbage", "Water Stagnation", "Other"]
+ *                 department:
+ *                   type: string
+ *                   enum: ["Department of Drinking Water and Sanitation", "Department of Rural Works", "Department of Road Construction", "Department of Energy", "Department of Health, Medical Education & Family Welfare"]
+ *                 duplicate:
+ *                   type: boolean
+ *                 image:
+ *                   type: string
+ *                 report:
+ *                   type: integer
+ *                   nullable: true
  *       400:
  *         description: Bad request (missing image or lat/lon)
  *       500:
@@ -58,7 +78,7 @@ router.get('/summary', storage.single("image"), (req, res) => {
   let dupid = 0;
   // Only consider reports within 20 meters using ST_Distance_Sphere
   db.query(
-    `SELECT id, description, type 
+    `SELECT id, description, category
      FROM Reports 
      WHERE status IN('submitted','progress') 
      AND ST_Distance_Sphere(location, POINT(?, ?)) <= ?`,
@@ -70,11 +90,11 @@ router.get('/summary', storage.single("image"), (req, res) => {
       } else {
         if (results.length === 0) {
           console.log("No nearby reports found.");
-          prompt = "This is a civic issue reporting system. Describe the issue in detail to report it, categorise it and specify which department does it come under. Also set duplicate to false";
+          prompt = "This is a civic issue reporting system. Describe the issue in detail to report it and specify which category and department does it come under. Also set duplicate to false";
         } else {
           console.log("Found nearby report");
           dupid = results[0].id;
-          prompt = "This is a civic issue reporting system. Check if this image matches the description '" + results[0].description + "' and category '" + results[0].type + "'. If it does, set duplicate to true. If false, describe the issue in detail to report, categorise and specify which department does it come under.";
+          prompt = "This is a civic issue reporting system. Check if this image matches the description '" + results[0].description + "' and category '" + results[0].category + "'. If it does, set duplicate to true. If false, describe the issue in detail to report, categorise and specify which department does it come under.";
         }
         console.log("Calling Gemini with prompt:", prompt);
         ai.models.generateContent({
@@ -136,7 +156,7 @@ router.get('/summary', storage.single("image"), (req, res) => {
  *           schema:
  *             type: object
  *             properties:
- *               isDuplicate:
+ *               duplicate:
  *                 type: boolean
  *               image:
  *                 type: string
@@ -144,7 +164,7 @@ router.get('/summary', storage.single("image"), (req, res) => {
  *                 type: integer
  *               description:
  *                 type: string
- *               type:
+ *               category:
  *                 type: string
  *               department:
  *                 type: string
@@ -165,13 +185,13 @@ router.post('/', (req, res) => {
   if (!req.body || typeof req.body !== 'object') {
     return res.status(400).json({ error: 'Request body is required' });
   }
-  const { isDuplicate, image, report, description, type, department, lat, lon } = req.body;
+  const { duplicate, image, report, description, category, department, lat, lon } = req.body;
 
-  if (typeof isDuplicate === 'undefined' || !image) {
-    return res.status(400).json({ error: 'isDuplicate and image are required' });
+  if (typeof duplicate === 'undefined' || !image) {
+    return res.status(400).json({ error: 'duplicate and image are required' });
   }
 
-  if (isDuplicate === true || isDuplicate === 'true') {
+  if (duplicate === true || duplicate === 'true') {
     // Duplicate: require report id
     if (!report) {
       return res.status(400).json({ error: 'report is required for duplicate issues' });
@@ -199,14 +219,14 @@ router.post('/', (req, res) => {
       }
     );
   } else {
-    // Not duplicate: require description, type, department, latitude, longitude
-    if (!description || !type || !department || typeof lat === 'undefined' || typeof lon === 'undefined') {
-      return res.status(400).json({ error: 'description, type, department, lat, and lon are required for new issues' });
+    // Not duplicate: require description, category, department, latitude, longitude
+    if (!description || !category || !department || typeof lat === 'undefined' || typeof lon === 'undefined') {
+      return res.status(400).json({ error: 'description, category, department, lat, and lon are required for new issues' });
     }
     // Insert into Reports
     db.query(
-      "INSERT INTO Reports (dateofreport, type, description, department, location, count, status) VALUES (CURDATE(), ?, ?, ?, POINT(?,?), 1, 'submitted')",
-      [type, description, department, lon, lat],
+      "INSERT INTO Reports (dateofreport, category, description, department, location, count, status) VALUES (CURDATE(), ?, ?, ?, POINT(?,?), 1, 'submitted')",
+      [category, description, department, lon, lat],
       function(err, result) {
         if (err) {
           console.error("Database insert error:", err);
@@ -254,7 +274,7 @@ router.post('/', (req, res) => {
  *                 properties:
  *                   id: { type: integer }
  *                   dateofreport: { type: string }
- *                   type: { type: string }
+ *                   category: { type: string }
  *                   description: { type: string }
  *                   department:
  *                     type: string
@@ -282,7 +302,7 @@ router.get('/', (req, res) => {
     SELECT 
       id, 
       dateofreport, 
-      type, 
+      category, 
       description, 
       department,
       count, 
@@ -311,7 +331,7 @@ router.get('/', (req, res) => {
       const base = {
         id: r.id,
         dateofreport: r.dateofreport,
-        type: r.type,
+        category: r.category,
         description: r.description,
         department: r.department,
         count: r.count,
