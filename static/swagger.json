@@ -63,7 +63,7 @@
         "summary": "Get all reports (Admin Only)",
         "responses": {
           "200": {
-            "description": "List of reports from IssueView",
+            "description": "List of reports",
             "content": {
               "application/json": {
                 "schema": {
@@ -110,6 +110,21 @@
                         "items": {
                           "type": "string"
                         }
+                      },
+                      "resolved": {
+                        "type": "object",
+                        "properties": {
+                          "dateofresolution": {
+                            "type": "string"
+                          },
+                          "image": {
+                            "type": "string"
+                          },
+                          "remarks": {
+                            "type": "string"
+                          }
+                        },
+                        "description": "Present only if the issue is resolved"
                       }
                     }
                   }
@@ -364,65 +379,10 @@
                         "items": {
                           "type": "string"
                         }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Database error"
-          }
-        }
-      }
-    },
-    "/api/issue/resolved": {
-      "get": {
-        "summary": "Get resolved issue details by report id or all resolved issues",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "report",
-            "required": false,
-            "schema": {
-              "type": "integer"
-            },
-            "description": "Report id to fetch resolved issue details. If not provided, returns all resolved issues."
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Resolved issue details or list of all resolved issues",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "oneOf": [
-                    {
-                      "type": "object",
-                      "properties": {
-                        "report": {
-                          "type": "integer"
-                        },
-                        "dateofresolution": {
-                          "type": "string"
-                        },
-                        "image": {
-                          "type": "string"
-                        },
-                        "remarks": {
-                          "type": "string"
-                        }
-                      }
-                    },
-                    {
-                      "type": "array",
-                      "items": {
+                      },
+                      "resolved": {
                         "type": "object",
                         "properties": {
-                          "report": {
-                            "type": "integer"
-                          },
                           "dateofresolution": {
                             "type": "string"
                           },
@@ -432,16 +392,14 @@
                           "remarks": {
                             "type": "string"
                           }
-                        }
+                        },
+                        "description": "Present only if the issue is resolved"
                       }
                     }
-                  ]
+                  }
                 }
               }
             }
-          },
-          "404": {
-            "description": "Resolved issue not found"
           },
           "500": {
             "description": "Database error"

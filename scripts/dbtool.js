@@ -57,9 +57,13 @@ const schema = [
         ST_Y(Reports.location) AS lat,
         ST_X(Reports.location) AS lon,
         GROUP_CONCAT(UserReports.imagename) AS images,
-        GROUP_CONCAT(UserReports.user) AS users
+        GROUP_CONCAT(UserReports.user) AS users,
+        MAX(ResolvedIssues.dateofresolution) AS dateofresolution,
+        MAX(ResolvedIssues.image) AS resolved_image,
+        MAX(ResolvedIssues.remarks) AS resolved_remarks
       FROM Reports
       LEFT JOIN UserReports ON Reports.id = UserReports.report
+      LEFT JOIN ResolvedIssues ON Reports.id = ResolvedIssues.report
       GROUP BY Reports.id`
 ];
 

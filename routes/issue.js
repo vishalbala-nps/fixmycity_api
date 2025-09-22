@@ -266,6 +266,13 @@ router.post('/', (req, res) => {
  *                   images:
  *                     type: array
  *                     items: { type: string }
+ *                   resolved:
+ *                     type: object
+ *                     properties:
+ *                       dateofresolution: { type: string }
+ *                       image: { type: string }
+ *                       remarks: { type: string }
+ *                     description: Present only if the issue is resolved
  *       500:
  *         description: Database error
  */
@@ -283,7 +290,10 @@ router.get('/', (req, res) => {
       lat,
       lon,
       images,
-      users
+      users,
+      dateofresolution,
+      resolved_image,
+      resolved_remarks
     FROM IssueView
     `;
 
@@ -292,96 +302,36 @@ router.get('/', (req, res) => {
   }
   sql += ' ORDER BY dateofreport DESC';
 
-  db.query(sql,[req.user], (err, results) => {
+  db.query(sql, [req.user], (err, results) => {
     if (err) {
       console.error("Database query error:", err);
       return res.status(500).json({ error: 'Database error' });
     }
-    const formatted = results.map(r => ({
-      id: r.id,
-      dateofreport: r.dateofreport,
-      type: r.type,
-      description: r.description,
-      department: r.department,
-      count: r.count,
-      status: r.status,
-      lat: r.lat,
-      lon: r.lon,
-      images: r.images ? r.images.split(',') : []
-      // users field intentionally omitted from response
-    }));
+    const formatted = results.map(r => {
+      const base = {
+        id: r.id,
+        dateofreport: r.dateofreport,
+        type: r.type,
+        description: r.description,
+        department: r.department,
+        count: r.count,
+        status: r.status,
+        lat: r.lat,
+        lon: r.lon,
+        images: r.images ? r.images.split(',') : []
+        // users field intentionally omitted from response
+      };
+      if (r.dateofresolution) {
+        base.resolved = {
+          dateofresolution: r.dateofresolution,
+          image: r.resolved_image,
+          remarks: r.resolved_remarks
+        };
+      }
+      return base;
+    });
     res.json(formatted);
   });
-});
-
-/**
- * @openapi
- * /api/issue/resolved:
- *   get:
- *     summary: Get resolved issue details by report id or all resolved issues
- *     parameters:
- *       - in: query
- *         name: report
- *         required: false
- *         schema:
- *           type: integer
- *         description: Report id to fetch resolved issue details. If not provided, returns all resolved issues.
- *     responses:
- *       200:
- *         description: Resolved issue details or list of all resolved issues
- *         content:
- *           application/json:
- *             schema:
- *               oneOf:
- *                 - type: object
- *                   properties:
- *                     report: { type: integer }
- *                     dateofresolution: { type: string }
- *                     image: { type: string }
- *                     remarks: { type: string }
- *                 - type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       report: { type: integer }
- *                       dateofresolution: { type: string }
- *                       image: { type: string }
- *                       remarks: { type: string }
- *       404:
- *         description: Resolved issue not found
- *       500:
- *         description: Database error
- */
-router.get('/resolved', (req, res) => {
-  const reportId = req.query.report;
-  if (!reportId) {
-    // Show all resolved issues
-    db.query(
-      "SELECT report, dateofresolution, image, remarks FROM ResolvedIssues",
-      (err, results) => {
-        if (err) {
-          console.error("Database query error:", err);
-          return res.status(500).json({ error: 'Database error' });
-        }
-        res.json(results);
-      }
-    );
-    return;
-  }
-  db.query(
-    "SELECT report, dateofresolution, image, remarks FROM ResolvedIssues WHERE report = ?",
-    [reportId],
-    (err, results) => {
-      if (err) {
-        console.error("Database query error:", err);
-        return res.status(500).json({ error: 'Database error' });
-      }
-      if (!results.length) {
-        return res.status(404).json({ error: 'Resolved issue not found' });
-      }
-      res.json(results[0]);
-    }
-  );
 });
 
 module.exports = router;

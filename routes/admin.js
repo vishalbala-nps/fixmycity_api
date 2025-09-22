@@ -78,7 +78,7 @@ router.post('/auth', (req, res) => {
  *     summary: Get all reports (Admin Only)
  *     responses:
  *       200:
- *         description: List of reports from IssueView
+ *         description: List of reports
  *         content:
  *           application/json:
  *             schema:
@@ -100,6 +100,13 @@ router.post('/auth', (req, res) => {
  *                   images:
  *                     type: array
  *                     items: { type: string }
+ *                   resolved:
+ *                     type: object
+ *                     properties:
+ *                       dateofresolution: { type: string }
+ *                       image: { type: string }
+ *                       remarks: { type: string }
+ *                     description: Present only if the issue is resolved
  *       500:
  *         description: Database error
  */
@@ -115,7 +122,10 @@ router.get('/issue', (req, res) => {
             status, 
             lat,
             lon,
-            images
+            images,
+            dateofresolution,
+            resolved_image,
+            resolved_remarks
         FROM IssueView
         ORDER BY dateofreport DESC`,
         (err, results) => {
@@ -123,18 +133,28 @@ router.get('/issue', (req, res) => {
                 console.error("Database query error:", err);
                 return res.status(500).json({ error: 'Database error' });
             }
-            const formatted = results.map(r => ({
-                id: r.id,
-                dateofreport: r.dateofreport,
-                type: r.type,
-                description: r.description,
-                department: r.department,
-                count: r.count,
-                status: r.status,
-                lat: r.lat,
-                lon: r.lon,
-                images: r.images ? r.images.split(',') : []
-            }));
+            const formatted = results.map(r => {
+                const base = {
+                    id: r.id,
+                    dateofreport: r.dateofreport,
+                    type: r.type,
+                    description: r.description,
+                    department: r.department,
+                    count: r.count,
+                    status: r.status,
+                    lat: r.lat,
+                    lon: r.lon,
+                    images: r.images ? r.images.split(',') : []
+                };
+                if (r.dateofresolution) {
+                    base.resolved = {
+                        dateofresolution: r.dateofresolution,
+                        image: r.resolved_image,
+                        remarks: r.resolved_remarks
+                    };
+                }
+                return base;
+            });
             res.json(formatted);
         }
     );
