@@ -235,7 +235,7 @@
       }
     },
     "/api/issue/summary": {
-      "get": {
+      "post": {
         "summary": "Get issue summary with image and location",
         "requestBody": {
           "required": true,

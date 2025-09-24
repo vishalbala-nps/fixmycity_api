@@ -13,7 +13,7 @@ const dupradii = 100; // in meters
 /**
  * @openapi
  * /api/issue/summary:
- *   get:
+ *   post:
  *     summary: Get issue summary with image and location
  *     requestBody:
  *       required: true
@@ -57,7 +57,9 @@ const dupradii = 100; // in meters
  *       500:
  *         description: Database or Gemini error
  */
-router.get('/summary', storage.single("image"), (req, res) => {
+router.post('/summary', storage.single("image"), (req, res) => {
+	console.log(req.body);
+	console.log(req.file)
   if (!req.body || typeof req.body !== 'object') {
     if (req.file) fs.unlink(req.file.path, () => {});
     return res.status(400).json({ error: 'Request body is required' });
